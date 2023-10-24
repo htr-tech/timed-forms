@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <base target="_top" />
+    <style type="text/css">
+      @font-face {
+      font-family: "Iceberg";
+      font-style: normal;
+      font-weight: 400;
+      src: url(https://fonts.gstatic.com/s/iceberg/v10/8QIJdijAiM7o-qnZiI8Eqg.woff2)
+      format("woff2");
+      }
+      body {
+      background-color: #1b1d27 !important;
+      margin: 0 !important;
+      font-family: Iceberg, Arial, sans-serif !important;
+      text-align: center;
+      }
+      span {
+      color: yellowgreen;
+      font-size: 22px;
+      }
+      #maintitle {
+      color: red;
+      font-size: 30px;
+      font-weight: bold;
+      }
+      button,
+      input[type="text"] {
+      font-family: Iceberg;
+      font-size: 22px;
+      color: yellowgreen;
+      background: black;
+      text-align: center;
+      border: 1px solid red;
+      border-radius: 7px;
+      }
+      input[type="text"]:focus {
+      outline: 1px solid red;
+      }
+    </style>
+  </head>
+  <body>
+    <br><br><br>
+    <span id="maintitle">Generate Forms</span>
+    <br><br><br><br>
+    <form id="mainForm" autocomplete="off">
+      <input id="FormID" type="text" placeholder="Form ID" required pattern="^\S+$" title="sample-test" />
+      <br><br><br>
+      <input id="FormAddr" type="text" placeholder="Form Address" required pattern="^\S+$" title="https://docs.google..." />
+      <br><br><br>
+      <input id="MaxTime" type="text" placeholder="Time (00.20.00)" required pattern="[0-9.]+" title="HH.MM.SS" />
+      <br><br><br>
+      <input id="Attempt" type="text" placeholder="Attempt" title="01" />
+      <br><br><br>
+      <button style="width: 150px;" onclick="validate()">Enter</button>
+      <br><br><br>
+      <button id="accessButton" onclick="genLink()" style="display: none;">Click to Access Form</button>
+    </form>
+    <br><br>
+    2023 © Catz
+  </body>
+  <script>
+    // Prevent unwanted submission
+    document
+      .getElementById("mainForm")
+      .addEventListener("submit", function (event) {
+        event.preventDefault();
+      });
+    
+    document.addEventListener("keydown", function (event) {
+      if (event.ctrlKey && event.shiftKey) {
+        event.preventDefault();
+        return false;
+      }
+    });
+    
+    // Reload the page
+    function reloadPage() {
+      google.script.run
+        .withSuccessHandler(function (url) {
+          window.open(url + "?genForm", "_top");
+        })
+        .getScriptURL();
+    }
+    
+    // Access to the Next Page
+    function genLink() {
+      let idFormElement = document.getElementById("FormID").value;
+      google.script.run
+        .withSuccessHandler(function (url) {
+          window.open(url + "?fi=" + idFormElement, "_top");
+        })
+        .getScriptURL();
+    }
+    
+    // Validate New Form
+    function validate() {
+      const uAgent = "<?!= passedData.userAgent ?>";
+      const formList = "<?!= passedData.FormIDS ?>";
+      let idForm = document.getElementById("FormID").value;
+      let addrForm = document.getElementById("FormAddr").value;
+      let timeLimit = document.getElementById("MaxTime").value;
+      let numAttempt = document.getElementById("Attempt").value;
+      if (numAttempt === "" || numAttempt === "0") {
+        numAttempt = 1;
+      }
+      
+      if (
+        !formList.includes(idForm) &&
+        addrForm.length > 30 &&
+        /^\d{2}\.\d{2}\.\d{2}$/.test(timeLimit)
+      ) {
+        const formToken = addrForm.match(/\/e\/([^/]+)/)[1];
+        const entryID = addrForm.match(/entry\.(\d+)/)[1];
+    
+        google.script.run
+          .withSuccessHandler(function () {
+            document.getElementById("accessButton").style.display = "inline-block";
+          })
+          .formLogger(idForm, formToken, entryID, timeLimit, numAttempt, uAgent);
+      } else {
+        reloadPage();
+      }
+    }
+  </script>
+</html>
+<!-- / -->

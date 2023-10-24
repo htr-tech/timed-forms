@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <base target="_top" />
+    <style type="text/css">
+      @font-face {
+      font-family: "Iceberg";
+      font-style: normal;
+      font-weight: 400;
+      src: url(https://fonts.gstatic.com/s/iceberg/v10/8QIJdijAiM7o-qnZiI8Eqg.woff2)
+      format("woff2");
+      }
+      body {
+      background-color: #1b1d27 !important;
+      margin: 0 !important;
+      font-family: Iceberg, Arial, sans-serif !important;
+      text-align: center;
+      overflow: hidden;
+      }
+      p,
+      span {
+      color: yellowgreen;
+      font-size: 20px;
+      }
+      span {
+      color: yellow;
+      }
+      #timer {
+      width: 650px;
+      margin: auto;
+      display: flex;
+      justify-content: space-between;
+      }
+      #time-remaining {
+      font-weight: bold;
+      color: red;
+      font-size: 35px;
+      margin-top: 9px;
+      }
+      @keyframes doot {
+      50% {
+      opacity: 0;
+      }
+      }
+      #EndPopup {
+      display: none;
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      }
+      .popup-content {
+      background-color: #1b1c1c;
+      margin: 15% auto;
+      padding: 15px;
+      border: 1px solid #888;
+      width: 60%;
+      }
+      #form-iframe {
+      width: 750px;
+      border-radius: 10px;
+      }
+      #TimeOver {
+      color: red;
+      font-size: 38px;
+      font-weight: bold;
+      -webkit-animation-name: blinker;
+      -webkit-animation-duration: 7s;
+      -webkit-animation-timing-function: linear;
+      -webkit-animation-iteration-count: infinite;
+      }
+      @keyframes blinker {
+      25% {
+      opacity: 2.0;
+      color: red;
+      }
+      50% {
+      opacity: 2.0;
+      color: yellowgreen;
+      }
+      75% {
+      opacity: 2.0;
+      color: yellow;
+      }
+      100% {
+      opacity: 2.0;
+      color: red;
+      }
+      }
+    </style>
+  </head>
+  <body oncontextmenu="return false;">
+    <div id="timer">
+      <span id="time-remaining"><?!= serverData[3] ?></span>
+      <p>&#x1F550; <span id="maxtime"><?!= serverData[3] ?></span></p>
+    </div>
+    <div id="EndPopup">
+      <div class="popup-content">
+        <span id="TimeOver"></span>
+      </div>
+      <div id="footer" style="color: yellow;">2023 © Catz</div>
+    </div>
+    <div id="Frame">
+      <iframe id="form-iframe" style="filter: invert(1) brightness(120%);" frameborder="0" marginheight="0" marginwidth="0">
+      Loading...
+      </iframe>
+      <div id="footer" style="color: yellow;">2023 © Catz</div>
+    </div>
+    <script>
+      document.addEventListener("keydown", function (event) {
+        if (event.ctrlKey && event.shiftKey) {
+          event.preventDefault();
+          return false;
+        }
+      });
+      
+      const uuID = '<?!= serverData[0] ?>';
+      const fmID = '<?!= serverData[1] ?>';
+      const entry = '<?!= serverData[2] ?>';
+      const formID = '<?!= serverData[5] ?>';
+      const uName = '<?!= serverData[6] ?>';
+      
+      const timer = document.getElementById("timer");
+      const iframe = document.querySelector('#form-iframe');    
+      iframe.style.height = (window.innerHeight - 110) + "px";
+      if (window.innerWidth <= 700) {
+        iframe.style.width = "100%";
+        timer.style.width = (window.innerWidth - 35) + "px";
+      }
+      
+      iframe.src = 'https://docs.google.com/forms/d/e/' + fmID + '/viewform?usp=pp_url&embedded=true&entry.' + entry + '=' + uuID;
+      
+      let loadcount = 0;
+      iframe.onload = function () {
+        loadcount += 1;
+        if (loadcount === 1) {
+          timeCounter();
+        } else if (loadcount === 2) {
+          clearTimeout(timeoutID);
+          google.script.run.withSuccessHandler(finalmsg("Form Submitted"))
+          .infoLogger(uuID, formID, uName, "Submitted");
+          return;
+        }
+      }
+      
+      function finalmsg(message) {
+        const frame = document.getElementById('Frame');
+        frame.style.display = 'none';
+        timer.style.display = 'none';
+        document.getElementById('TimeOver').innerHTML = message;
+        document.getElementById('EndPopup').style.display = 'block';
+      }
+      
+      // Count & update time
+      maxtime = document.querySelector('#maxtime').innerText;
+      const [hours, minutes, seconds] = maxtime.split(':');
+      if (maxtime.startsWith("00")) {
+        document.querySelector('#maxtime').innerText = maxtime.substring(3);
+      }
+      const counter = new Date();
+      counter.setHours(hours, minutes, seconds);
+      
+      function timeCounter() {
+        counter.setSeconds(counter.getSeconds() - 1);
+        const hh = counter.getHours();
+        const mm = counter.getMinutes();
+        const ss = counter.getSeconds();
+        
+        let timeRemaining = '';
+        if (hh !== 0) {
+          timeRemaining += String(hh).padStart(2, '0') + ':';
+        }
+        if (hh !== 0 || mm !== 0) {
+          timeRemaining += String(mm).padStart(2, '0') + ':';
+        }
+        timeRemaining += String(ss).padStart(2, '0');
+        const cout = document.querySelector('#time-remaining');
+        cout.innerText = timeRemaining;
+        if (hh === 0 && mm === 0 && ss < 30) {
+          cout.style.animation = 'doot 1.25s linear infinite';
+        }
+
+        if (hh === 0 && mm === 0 && ss === 0) {
+          google.script.run.withSuccessHandler(finalmsg("Times Up"))
+          .infoLogger(uuID, formID, uName, "Time Over");
+          return;
+        }
+        timeoutID = setTimeout(timeCounter, 1000);
+      }
+    </script>
+  </body>
+</html>
+<!-- / -->

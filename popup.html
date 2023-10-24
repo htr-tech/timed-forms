@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <base target="_top" />
+    <style type="text/css">
+      @font-face {
+      font-family: "Iceberg";
+      font-style: normal;
+      font-weight: 400;
+      src: url(https://fonts.gstatic.com/s/iceberg/v10/8QIJdijAiM7o-qnZiI8Eqg.woff2)
+      format("woff2");
+      }
+      body {
+      background-color: #1b1d27 !important;
+      margin: 0 !important;
+      font-family: Iceberg, Arial, sans-serif !important;
+      text-align: center;
+      }
+      p,
+      span,
+      h2 {
+      color: yellowgreen;
+      font-size: 22px;
+      }
+      #maintitle {
+      color: red;
+      font-size: 35px;
+      font-weight: bold;
+      -webkit-animation-name: blinker;
+      -webkit-animation-duration: 7s;
+      -webkit-animation-timing-function: linear;
+      -webkit-animation-iteration-count: infinite;
+      }
+      @keyframes blinker {
+      25% {
+      opacity: 2.0;
+      color: cyan;
+      }
+      50% {
+      opacity: 2.0;
+      color: lime;
+      }
+      75% {
+      opacity: 2.0;
+      color: yellow;
+      }
+      100% {
+      opacity: 2.0;
+      color: red;
+      }
+      }
+      button,
+      input[type="text"] {
+      font-family: Iceberg;
+      font-size: 27px;
+      color: yellowgreen;
+      background: black;
+      text-align: center;
+      width: 250px;
+      border: 1px solid red;
+      border-radius: 7px;
+      }
+      input[id="formID"] {
+      font-size: 22px;
+      color: lime;
+      width: none;
+      }
+      input[type="text"]:focus {
+      outline: 1px solid red;
+      }
+    </style>
+  </head>
+  <body oncontextmenu="return false;">
+    <!-- <body> -->
+    <br><br><br>
+    <span id="maintitle">Timed Forms</span>
+    <p>
+      Unique ID: <span style="color: gray;" id="uniqueId"><?!= serverData.userID ?></span>
+    </p>
+    <form id="mainForm" autocomplete="off">
+      <!-- <input id="formID" type="text" placeholder="Enter Your Exam ID" required> -->
+      <span id="customspan"></span>
+      <p id="formIDshow">
+        Exam ID:
+        <span style="color: gray;" id="formID"><?!= serverData.formID ?></span>
+      </p>
+      <h2>Enter Your Name</h2>
+      <input type="text" id="UserName" required />
+      <br><br><br>
+      <button style="width: 150px;" onclick="updateServer()">Enter</button>
+      <br><br><br>
+      <button id="accessButton" onclick="accessNextPage()" style="display: none;">Click to Open form</button>
+    </form>
+    <br><br>
+    2023 © Catz
+  </body>
+  <script>
+    window.onload = function () {
+      var idFormss = document.getElementById("formID").innerText;
+      if (idFormss) {
+        // document.getElementById("formID").style.display = "none";
+      } else {
+        // Hide Form ID
+        document.getElementById("formIDshow").style.display = "none";
+    
+        // Add Input Element
+        var newElement = document.createElement("input");
+        newElement.id = "formID";
+        newElement.type = "text";
+        newElement.placeholder = "Enter Your Exam ID";
+        newElement.required = true;
+        document.getElementById("customspan").appendChild(newElement);
+      }
+    };
+    
+    // Prevent unwanted submission
+    document
+      .getElementById("mainForm")
+      .addEventListener("submit", function (event) {
+        event.preventDefault();
+      });
+    
+    document.addEventListener("keydown", function (event) {
+      if (event.ctrlKey && event.shiftKey) {
+        event.preventDefault();
+        return false;
+      }
+    });
+    
+    // Info Logger
+    function updateServer() {
+      var userID = document.getElementById("uniqueId").innerText;
+      var idFormElement = document.getElementById("formID");
+      var idForm = idFormElement.value ? idFormElement.value : idFormElement.innerText;
+      var userName = document.getElementById("UserName").value;
+    
+      if (userName.length > 2 && idForm.length > 5) {
+        google.script.run
+          .withSuccessHandler(function () {
+            document.getElementById("accessButton").style.display = "inline-block";
+          })
+          .infoLogger(userID, idForm.trim(), userName.trim(), "Registered");
+      }
+    }
+    
+    // Access to the Next Page
+    function accessNextPage() {
+      var idFormElement = document.getElementById("formID");
+      const idForm = idFormElement.value ? idFormElement.value : idFormElement.innerText;
+    
+      google.script.run
+        .withSuccessHandler(function (url) {
+          window.open(url + "?fi=" + idForm.trim() + "&tr=69", "_top");
+        })
+        .getScriptURL();
+    }
+  </script>
+</html>
+<!-- / -->
